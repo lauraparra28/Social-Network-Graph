@@ -52,6 +52,70 @@ This graph allows deep insights into relationships, influence, popularity, and c
 
 ![Social Media System Graph Model](social_media_graph.png)
 
-## 🔍 Useful Cypher Queries
+# 🔍 Useful Cypher Queries
 
-1. Recommend user based on groups
+## ⭐ 1. RECOMENDAÇÃO DE POSTS
+
+### ✅ 1.1 Posts curtidos por pessoas que o usuário segue
+
+Recomenda posts que pessoas seguidas curtiram, mas que o usuário ainda não curtiu.
+
+```cypher
+MATCH (u:Person {name: "Juliana"})-[:FOLLOWS]->(friend)
+MATCH (friend)-[:LIKED]->(p:Post)
+WHERE NOT (u)-[:LIKED]->(p)
+RETURN p, friend.name AS recommended_by
+LIMIT 10;
+```
+
+### ✅ 1.2 Posts comentados por pessoas que o usuário segue
+
+```cypher
+MATCH (u:Person {name: "Laura"})-[:FOLLOWS]->(friend)
+MATCH (friend)-[:WROTE]->(:Comment)-[:ON_POST]->(p:Post)
+WHERE NOT (u)-[:LIKED]->(p)
+RETURN p, friend.name AS recommended_by
+LIMIT 10;
+```
+
+### ✅ 1.3 Posts populares na comunidade do usuário
+
+```cypher
+MATCH (u:Person {name: "Laura"})-[:PART_OF]->(c:Community)
+MATCH (c)<-[:PART_OF]-(other:Person)-[:POSTED]->(p:Post)
+RETURN p, other.name AS from_user_in_community
+ORDER BY p.id DESC
+LIMIT 10;
+```
+
+### ✅ 1.4 Posts com mais curtidas recentemente
+
+```cypher
+MATCH (p:Post)<-[:LIKED]-(:Person)
+WITH p, COUNT(*) AS likes
+RETURN p, likes
+ORDER BY likes DESC
+LIMIT 10;
+```
+
+## ⭐ 2. RECOMENDAÇÃO DE USUÁRIOS
+
+### ✅ 2.1 Pessoas seguidas pelos amigos (Follow do Follow)
+
+
+```cypher
+MATCH (u:Person {name: "Laura"})-[:FOLLOWS]->(f)-[:FOLLOWS]->(rec:Person)
+WHERE u <> rec AND NOT (u)-[:FOLLOWS]->(rec)
+RETURN DISTINCT rec
+LIMIT 10;
+```
+
+### ✅ 2.2 Pessoas com interesses ou comunidades em comum
+
+```cypher
+MATCH (u:Person {name: "Laura"})-[:PART_OF]->(c:Community)
+MATCH (other:Person)-[:PART_OF]->(c)
+WHERE other <> u
+RETURN DISTINCT other, c.name AS same_community
+LIMIT 10;
+```
