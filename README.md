@@ -30,19 +30,21 @@ Using graph modeling principles, you must design, build, and query a complete Ne
 
 - Person
 - Post
+- Comment
 - Data
 - Group
 - Community
 
 ### Relationships
 
-- (:Person)-[:FOLLOWS]->(:Person)	A person follows another
-- (:Person)-[:POSTED]->(:Post) 
-- (:Person)-[:LIKED]->(:Post)
-- (:Post)-[:CREATED_ON]->(:Data) 
-- (:Person)-[:COMMENTED {text: "xxx"}]->(:Post) 
-- (:Person)-[:MEMBER_OF]->(:Group) 
-- (:Group)-[:PART_OF]->(:Community)
+- `(:Person)-[:FOLLOWS]->(:Person)`
+- `(:Person)-[:POSTED]->(:Post) `
+- `(:Person)-[:LIKED]->(:Post)`
+- `(:Post)-[:CREATED_ON]->(:Data)` 
+- `(:Person)-[:WRITE]->(:Comment)`
+- `(:Comment)-[:ON_DATE]->(:Data)` 
+- `(:Person)-[:MEMBER_OF]->(:Group)` 
+- `(:Group)-[:PART_OF]->(:Community)`
 
 This graph allows deep insights into relationships, influence, popularity, and connection paths.
 
