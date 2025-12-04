@@ -119,3 +119,66 @@ WHERE other <> u
 RETURN DISTINCT other, c.name AS same_community
 LIMIT 10;
 ```
+
+# 🔍 Rodar Node Similarity para encontrar usuários parecidos
+
+## 🔧 Criar grafo projetado
+
+```cypher
+CALL gds.graph.project(
+  'socialGraph',
+  ['Person', 'Post', 'Comment'],
+  {
+    FOLLOWS: { type: 'FOLLOWS', orientation: 'UNDIRECTED' },
+    LIKED:   { type: 'LIKED', orientation: 'UNDIRECTED' },
+    WROTE:   { type: 'WROTE', orientation: 'UNDIRECTED' },
+    POSTED:  { type: 'POSTED', orientation: 'UNDIRECTED' },
+    ON_POST: { type: 'ON_POST', orientation: 'UNDIRECTED' }
+  }
+);
+
+```
+
+## ✔️ Execução do algoritmo
+
+```cypher
+CALL gds.nodeSimilarity.write(
+  'socialGraph',
+  {
+    nodeLabels: ['Person'],
+    writeRelationshipType: 'SIMILAR_TO',
+    writeProperty: 'score'
+  }
+);
+```
+
+### ✅ Ver os usuários mais similares
+
+```cypher
+MATCH (u:Person {name: "Diego"})-[s:SIMILAR_TO]->(other)
+RETURN other.name AS similarUser, s.score
+ORDER BY s.score DESC
+LIMIT 10;
+```
+
+### ✅ Recomendação de usuários baseada em similaridade
+
+```cypher
+MATCH (u:Person {id: $userId})-[s:SIMILAR_TO]->(other)
+WHERE NOT (u)-[:FOLLOWS]->(other)
+RETURN other.name AS recommendedUser, s.score
+ORDER BY s.score DESC
+LIMIT 10;
+```
+
+### ✅ Recomendação de posts usando usuários similares
+
+```cypher
+MATCH (u:Person {id: $userId})-[s:SIMILAR_TO]->(other)
+MATCH (other)-[:LIKED]->(p:Post)
+WHERE NOT (u)-[:LIKED]->(p)
+RETURN p, other.name AS similarUser, s.score
+ORDER BY s.score DESC
+LIMIT 10;
+
+```
